@@ -5,13 +5,18 @@ const Gallery = require('../models/Gallery');
 const auth = require('../middleware/auth');
 
 // Configuration Gmail
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASSWORD
-  }
-});
+  const transporter = nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_PASSWORD
+    },
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
 
 // Envoyer le lien de la galerie par email
 router.post('/send', auth, async (req, res) => {
