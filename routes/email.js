@@ -25,7 +25,7 @@ router.post('/send', auth, async (req, res) => {
     }
 
     // Construire le lien
-    const galleryLink = `http://localhost:4200/g/${gallery.uniqueUrl}`;
+    const galleryLink = `https://gallery-app-five-iota.vercel.app/g/${gallery.uniqueUrl}`;
 
     // Contenu de l'email
     const mailOptions = {
