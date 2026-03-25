@@ -1,45 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 const Gallery = require('../models/Gallery');
 const auth = require('../middleware/auth');
 
-// Configuration Gmail
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_PASSWORD
-    },
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Envoyer le lien de la galerie par email
 router.post('/send', auth, async (req, res) => {
   try {
     const { galleryId, clientEmail, clientName } = req.body;
 
-    // Récupérer la galerie
     const gallery = await Gallery.findById(galleryId);
     if (!gallery) {
       return res.status(404).json({ message: 'Galerie non trouvée' });
     }
 
-    // Construire le lien
     const galleryLink = `https://gallery-app-five-iota.vercel.app/g/${gallery.uniqueUrl}`;
 
-    // Contenu de l'email
-    const mailOptions = {
-      from: `"Gallery App 📷" <${process.env.GMAIL_USER}>`,
+    await resend.emails.send({
+      from: 'Gallery App <onboarding@resend.dev>',
       to: clientEmail,
       subject: `Vos photos sont disponibles - ${gallery.name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #3f51b5;">📷 Vos photos sont prêtes !</h2>
+          <h2 style="color: #1a1a2e;">📷 Vos photos sont prêtes !</h2>
           
           <p>Bonjour ${clientName},</p>
           
@@ -49,14 +33,14 @@ router.post('/send', auth, async (req, res) => {
           
           <div style="text-align: center; margin: 30px 0;">
             <a href="${galleryLink}" 
-               style="background-color: #3f51b5; color: white; padding: 15px 30px; 
-                      text-decoration: none; border-radius: 5px; font-size: 16px;">
+               style="background-color: #1a1a2e; color: white; padding: 15px 30px; 
+                      text-decoration: none; border-radius: 8px; font-size: 16px;">
               Voir mes photos
             </a>
           </div>
           
           <p style="color: #666; font-size: 14px;">
-            Ou copiez ce lien dans votre navigateur :<br>
+            Ou copiez ce lien :<br>
             <a href="${galleryLink}">${galleryLink}</a>
           </p>
 
@@ -67,9 +51,8 @@ router.post('/send', auth, async (req, res) => {
           </p>
         </div>
       `
-    };
+    });
 
-    await transporter.sendMail(mailOptions);
     res.json({ message: 'Email envoyé avec succès !' });
 
   } catch (err) {
